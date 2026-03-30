@@ -8,26 +8,26 @@ const connectDB = async () => {
 
   try {
     await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      family: 4,
     });
     console.log('MongoDB connected');
+    return true;
   } catch (error) {
     console.warn('MongoDB connection failed:', error.message);
+  }
 
-    try {
-      mongoServer = await MongoMemoryServer.create();
-      const memoryUri = mongoServer.getUri();
+  try {
+    mongoServer = await MongoMemoryServer.create();
+    const memoryUri = mongoServer.getUri();
 
-      await mongoose.connect(memoryUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-      console.log('MongoDB in-memory server connected');
-    } catch (memoryError) {
-      console.error('Failed to start in-memory database:', memoryError.message);
-      console.log('Server will start but database operations will fail');
-    }
+    await mongoose.connect(memoryUri, {
+      family: 4,
+    });
+    console.log('MongoDB in-memory server connected');
+    return true;
+  } catch (memoryError) {
+    console.error('Failed to start in-memory database:', memoryError.message);
+    return false;
   }
 };
 

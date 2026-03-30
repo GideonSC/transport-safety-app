@@ -14,11 +14,13 @@ const PORT = process.env.PORT || 4000;
 
 const allowedOrigins = process.env.CORS_ALLOWED_ORIGINS
   ? process.env.CORS_ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
-  : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174'];
+  : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174', 'http://127.0.0.1:5174', 'http://localhost:5175', 'http://127.0.0.1:5175'];
+
+const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || (process.env.NODE_ENV !== 'production' && localOriginPattern.test(origin))) {
       return callback(null, true);
     }
     callback(new Error('Not allowed by CORS'));
@@ -68,14 +70,13 @@ app.use(errorHandler);
 
 const startServer = async () => {
   try {
-    // Start server first, then connect to database asynchronously
+    const connected = await connectDB();
+    if (!connected) {
+      throw new Error('Unable to establish any database connection');
+    }
+
     const server = app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
-    });
-
-    // Connect to database in background
-    connectDB().catch((error) => {
-      console.error('Database connection failed:', error.message);
     });
 
     return server;

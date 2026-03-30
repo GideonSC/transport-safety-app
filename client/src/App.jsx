@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, NavLink } from 'react-router-dom';
 import Home from '../pages/Home';
 import Reports from '../pages/Reports';
 import About from '../pages/About';
@@ -47,14 +47,25 @@ function App() {
       <header className="app-header">
         <div>
           <h1>Public Transit Safety</h1>
-          {isAuthenticated && user && <p>Welcome, {user.name}</p>}
+          <p className="page-tagline">Report incidents quickly, share exact location details, and keep every journey safer.</p>
+          {isAuthenticated && user && <p className="welcome-text">Welcome, {user.name}</p>}
         </div>
 
         <nav>
-          <Link to="/">Home</Link>
-          <Link to="/reports">Reports</Link>
-          <Link to="/about">About</Link>
-          {isAuthenticated && user?.role === 'admin' && <Link to="/admin">Admin</Link>}
+          <NavLink to="/" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+            Home
+          </NavLink>
+          <NavLink to="/reports" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+            Reports
+          </NavLink>
+          <NavLink to="/about" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+            About
+          </NavLink>
+          {isAuthenticated && user?.role === 'admin' && (
+            <NavLink to="/admin" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+              Admin
+            </NavLink>
+          )}
           {installVisible && (
             <button type="button" onClick={handleInstallClick} className="install-button">
               Install App
@@ -62,11 +73,15 @@ function App() {
           )}
           {!isAuthenticated ? (
             <>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
+              <NavLink to="/login" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                Login
+              </NavLink>
+              <NavLink to="/register" className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                Register
+              </NavLink>
             </>
           ) : (
-            <button type="button" onClick={logout} style={{ background: 'none', border: 'none', color: '#0b4f6c', cursor: 'pointer' }}>
+            <button type="button" onClick={logout} className="text-button">
               Logout
             </button>
           )}
