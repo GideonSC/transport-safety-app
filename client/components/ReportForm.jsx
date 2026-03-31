@@ -9,14 +9,14 @@ export default function ReportForm() {
   const [locationName, setLocationName] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
-  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
+  const requestGeolocation = () => {
     setLocationLoading(true);
     setError('');
 
@@ -33,16 +33,28 @@ export default function ReportForm() {
         setLocationLoading(false);
       },
       (geoError) => {
-        if (geoError.code === geoError.PERMISSION_DENIED) {
-          setError('Location permission denied. Please allow access to capture coordinates.');
-        } else {
-          setError('Unable to detect location. Please try again.');
+        let errorMessage = 'Unable to detect location.';
+
+        if (geoError && typeof geoError === 'object') {
+          if (geoError.code === 1) {
+            errorMessage = 'Location permission denied. Please enable location access in your browser settings and try again.';
+          } else if (geoError.code === 2) {
+            errorMessage = 'Location is unavailable. Please enable location services on your device.';
+          } else if (geoError.code === 3) {
+            errorMessage = 'Location detection timed out. You can manually enter coordinates below.';
+          }
+
+          if (geoError.message) {
+            errorMessage += ` (${geoError.message})`;
+          }
         }
+
+        setError(errorMessage);
         setLocationLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 30000, maximumAge: 0 }
     );
-  }, []);
+  };
 
   const handleImageChange = (event) => {
     const file = event.target.files?.[0] || null;
@@ -74,7 +86,7 @@ export default function ReportForm() {
       return;
     }
 
-    if (!latitude || !longitude) {
+    if (latitude === '' || longitude === '') {
       setError('Unable to submit without GPS coordinates.');
       setLoading(false);
       return;
@@ -154,15 +166,49 @@ export default function ReportForm() {
         </label>
 
         <div>
-          <p>Detected GPS coordinates:</p>
-          {locationLoading ? (
-            <p>Detecting coordinates...</p>
-          ) : (
-            <>
-              <p>Latitude: {latitude || 'Unavailable'}</p>
-              <p>Longitude: {longitude || 'Unavailable'}</p>
-            </>
+          <p>GPS coordinates:</p>
+          <button
+            type="button"
+            onClick={requestGeolocation}
+            disabled={locationLoading}
+            style={{ padding: '0.5rem 1rem', marginBottom: '1rem' }}
+          >
+            {locationLoading ? 'Detecting location...' : 'Detect current location'}
+          </button>
+
+          {locationLoading && <p>Detecting coordinates...</p>}
+          {!locationLoading && latitude === '' && longitude === '' && (
+            <p style={{ color: 'orange', marginBottom: '1rem' }}>
+              Location detection is off. Enter coordinates manually or click the button above.
+            </p>
           )}
+
+          <p>Latitude: {latitude !== '' ? latitude : 'Not detected'}</p>
+          <p>Longitude: {longitude !== '' ? longitude : 'Not detected'}</p>
+
+          <label style={{ marginTop: '1rem' }}>
+            Latitude (manual entry)
+            <input
+              type="number"
+              step="any"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+              placeholder="e.g., 40.7128"
+              required
+            />
+          </label>
+
+          <label>
+            Longitude (manual entry)
+            <input
+              type="number"
+              step="any"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              placeholder="e.g., -74.0060"
+              required
+            />
+          </label>
         </div>
 
         <label>
